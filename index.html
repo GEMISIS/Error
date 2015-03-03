@@ -1,0 +1,230 @@
+<html>
+	<head>
+		<title>Error - Gerald McAlister</title>
+		<style type="text/css">
+			a:link
+			{
+				color: #ff0000;
+			}
+			a:visited
+			{
+				color: #ff0000;
+			}
+			a:hover
+			{
+				color: #ff0000;
+			}
+			a:active
+			{
+				color: #ff0000;
+			}
+		</style>
+		<div style="position: absolute; color: #ff0000; font-size: 125%;">
+			Made by <a href="http://www.geraldmcalister.com">Gerald McAlister</a>
+		</div>
+		<div id="help" style="position: absolute; color: #ff0000; right: 0px; display: none; font-size: 125%;">
+			Move with WASD, space to jump, and enter to pause
+		</div>
+		<div id="score" style="position: absolute; color: #ff0000; margin-left: auto; margin-right: auto; text-align: center; display: none; font-size: 125%; width: 100%;">
+			Score: 0
+		</div>
+		<style>
+			body
+			{
+				margin: 0;
+			}
+			canvas
+			{
+				width: 100%;
+				height: 100%;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="paused" style="position: absolute; top: 50%; left: 50%; 
+	-moz-transform: translateX(-50%) translateY(-50%); -webkit-transform: 
+	translateX(-50%) translateY(-50%); transform: translateX(-50%) 
+	translateY(-50%); text-align: center; font-size: 250%; display:none; color: #ff0000">
+			<h1>
+				Paused
+				<br>
+				Press Escape to Quit
+			</h1>
+		</div>
+
+		<script src="js/ThreeJS/three.js"></script>
+		<script src="js/ThreeJS/loaders/OBJLoader.js"></script>
+		<script src="js/ThreeJS/loaders/MTLLoader.js"></script>
+		<script src="js/ThreeJS/loaders/OBJMTLLoader.js"></script>
+
+		<!-- Resources here, for those who want them lol !-->
+		<script src="fonts/helvetiker_regular.typeface.js"></script>
+
+		<!-- Physics! !-->
+		<script src="js/Physics/physi.js"></script>
+
+		<script type="text/javascript">
+			'use strict';
+
+			Physijs.scripts.worker = 'js/Physics/physijs_worker.js';
+			Physijs.scripts.ammo = 'ammo.js';
+	
+			var scene = new Physijs.Scene;
+			scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
+			scene.fog = new THREE.FogExp2( 0xff0000, 0.025 );
+			var renderer = new THREE.WebGLRenderer({ antialias: true, maxLights: 6 });
+
+			var camera = new THREE.PerspectiveCamera( 44, window.innerWidth/window.innerHeight, 0.1, 1000 );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+			document.body.appendChild( renderer.domElement );
+
+			var state = 0;
+			var keys = {left:false, right:false, up:false, down:false, space:false};
+
+
+			var setup = function()
+			{
+			}
+			var cleanup = function()
+			{
+			}
+			var onKeyDown = function(event)
+			{
+			}
+			var keyboardTrackerDown = function(event)
+			{
+				var keyCode = event.which;
+
+				if(!keys.up && keyCode == 87)
+				{
+					keys.up = true;
+				}
+				if(!keys.down && keyCode == 83)
+				{
+					keys.down = true;
+				}
+				if(!keys.left && keyCode == 65)
+				{
+					keys.left = true;
+				}
+				if(!keys.right && keyCode == 68)
+				{
+					keys.right = true;
+				}
+				if(!keys.space && keyCode == 32)
+				{
+					keys.space = true;
+				}
+			}
+			var keyboardTrackerUp = function(event)
+			{
+				var keyCode = event.which;
+
+				if(keys.up && keyCode == 87)
+				{
+					keys.up = false;
+				}
+				if(keys.down && keyCode == 83)
+				{
+					keys.down = false;
+				}
+				if(keys.left && keyCode == 65)
+				{
+					keys.left = false;
+				}
+				if(keys.right && keyCode == 68)
+				{
+					keys.right = false;
+				}
+				if(keys.space && keyCode == 32)
+				{
+					keys.space = false;
+				}
+			}
+			var update = function()
+			{
+			}
+			var render = function()
+			{
+			}
+
+			document.addEventListener("keydown", onKeyDown, false);
+
+			document.addEventListener("keydown", keyboardTrackerDown, false);
+			document.addEventListener("keyup", keyboardTrackerUp, false);
+
+			function onWindowResize()
+			{
+				var windowHalfX = window.innerWidth / 2;
+				var windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+			window.addEventListener( 'resize', onWindowResize, false );
+		</script>
+		
+		<script src="js/States/mainGame.js"></script>
+		<script src="js/States/mainMenu.js"></script>
+
+		<script src="js/Level.js"></script>
+
+		<!-- Base objects included first !-->
+		<script src="js/Objects/FloorPlane.js"></script>
+		<script src="js/Objects/Wall.js"></script>
+		<script src="js/Objects/Sphere.js"></script>
+		<script src="js/Objects/Cube.js"></script>
+		<script src="js/Objects/ObjModel.js"></script>
+
+		<!-- Then special objects like lights !-->
+		<script src="js/Objects/LightSource.js"></script>
+		<script src="js/Objects/DirectionalLight.js"></script>
+
+		<script>
+			var modelCache = new Array();
+			var previousState = -1;
+			var score = 0;
+
+			var backgroundMusic = new Audio("music/espionage.wav");
+			backgroundMusic.addEventListener("ended", function()
+			{
+				this.currentTime = 0;
+				this.play();
+			}, false);
+			backgroundMusic.play();
+
+			var loop = function()
+			{
+				if(state != previousState)
+				{
+					cleanup();
+					document.removeEventListener("keydown", onKeyDown, false);
+					switch(state)
+					{
+						case 0:
+						mainMenu();
+						break;
+						case 1:
+						mainGame();
+						break;
+					}
+					document.addEventListener("keydown", onKeyDown, false);
+					setup();
+					previousState = state;
+				}
+
+				requestAnimationFrame(loop);
+				update();
+				render();
+				renderer.render(scene, camera);
+			}
+
+			loop();
+		</script>
+	</body>
+</html>
+
